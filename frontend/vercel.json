@@ -8,17 +8,7 @@
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "headers": { "cache-control": "max-age=0" },
-      "dest": "/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
-    }
+    { "handle": "filesystem" },       
+    { "src": "/.*", "dest": "/index.html" }  
   ]
 }
