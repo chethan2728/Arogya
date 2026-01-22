@@ -1,0 +1,87 @@
+import validator from "validator";
+import bcrypt from "bcrypt";
+import { v2 as cloudinary } from "cloudinary";
+import doctorModel from "../models/doctorModel.js";
+import jwt from "jsonwebtoken";
+
+// backend/controllers/adminController.js
+const addDoctor = async (req, res) => {
+    try {
+        const { name, email, password, speciality, degree, experience, about, fees, address } = req.body
+
+        // 1. Validation: Ensure all fields, especially password, are present
+        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
+            return res.json({ success: false, message: "Missing Details" });
+        }
+
+        if (!validator.isEmail(email)) {
+            return res.json({ success: false, message: "Invalid Email Format" });
+        }
+
+        // 2. Hashing: Bcrypt needs a valid string for the first argument
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt); // If password is undefined, it throws your error
+
+
+        // 3. Prepare Data
+        const doctorData = {
+            name,
+            email,
+            password: hashedPassword,
+            experience: Number(experience), 
+            fees: Number(fees),
+            speciality,
+            degree,
+            about,
+            address,
+            image: " ", // Placeholder since you removed image upload
+            date: Date.now(),
+        };
+
+        const newDoctor = new doctorModel(doctorData);
+        await newDoctor.save();
+
+        res.json({ success: true, message: "Doctor Added Successfully" });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+//API functions for admin can be added here
+const loginAdmin = async (req, res) => {
+    try{
+        const {email, password} = req.body
+        
+        // Simple validation
+        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD){ 
+            
+            const token = jwt.sign(email+password,process.env.JWT_SECRET)
+
+            res.json({ success: true,token })
+
+        } else {
+            res.json({ success: false, message: "Invalid Credentials" })
+        }
+    } catch (error){
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// API to get all doctors list for admin panel
+
+const allDoctors = async (req, res) => {
+    try {
+        
+        const doctors = await doctorModel.find({}).select("-password")
+        res.json({ success: true, doctors })
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { addDoctor ,loginAdmin, allDoctors}
