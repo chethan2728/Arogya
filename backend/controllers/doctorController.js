@@ -1,5 +1,5 @@
-import doctorModel from "../models/doctorModel.js";
-
+import doctorModel from "../models/doctorModel.js"; // Ensure the path is correct
+import appointmentModel from "../models/appointmentModel.js"; // You'll need this too
 
 const changeAvailability = async (req, res) => {
     try {
@@ -25,5 +25,6 @@ const doctorList = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+
 
 export { changeAvailability, doctorList }
