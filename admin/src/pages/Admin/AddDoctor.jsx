@@ -16,6 +16,7 @@ const AddDoctor = () => {
     const [address1, setAddress1] = useState('')
     const [address2, setAddress2] = useState('')
     const [about, setAbout] = useState('')
+    const [phone, setPhone] = useState('')
 
     const { backendUrl, aToken } = useContext(AdminContext);
 
@@ -34,7 +35,8 @@ const AddDoctor = () => {
                 degree: education,
                 about,
                 address1,
-                address2
+                address2,
+                phone
             }
 
             const { data } = await axios.post(
@@ -48,7 +50,7 @@ const AddDoctor = () => {
                 // Clear Form
                 setName(''); setEmail(''); setPassword('');
                 setFees(''); setEducation(''); setAddress1('');
-                setAddress2(''); setAbout('');
+                setAddress2(''); setAbout(''); setPhone('');
             } else {
                 toast.error(data.message)
             }
@@ -76,6 +78,11 @@ const AddDoctor = () => {
                         <div className='flex-1 flex flex-col gap-1'>
                             <p>Doctor Email</p>
                             <input onChange={(e) => setEmail(e.target.value)} value={email} className='border border-cyan-200/40 rounded px-3 py-2 bg-white/70 surface-text' type="email" placeholder='Email' required />
+                        </div>
+                        <div className='flex-1 flex flex-col gap-1'>
+                            <p>Doctor Phone</p>
+                            <input onChange={(e) => setPhone(e.target.value)} value={phone} className='border border-cyan-200/40 rounded px-3 py-2 bg-white/70 surface-text' type="text" placeholder='+91XXXXXXXXXX' required />
+                            <p className='text-xs soft-text'>Use country code for SMS reminders.</p>
                         </div>
 
                         <div className='flex-1 flex flex-col gap-1'>

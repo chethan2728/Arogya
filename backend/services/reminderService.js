@@ -1,10 +1,10 @@
 import cron from 'node-cron';
-import twilio from 'twilio';
 import carePlanModel from '../models/carePlanModel.js';
 import userModel from '../models/userModel.js';
 import doctorModel from '../models/doctorModel.js';
+import { sendSms } from './smsService.js';
 
-const sendReminder = async (client, fromNumber, plan) => {
+const sendReminder = async (plan) => {
     if (plan.lastReminderAt) {
         const last = new Date(plan.lastReminderAt)
         const now = new Date()
@@ -16,18 +16,11 @@ const sendReminder = async (client, fromNumber, plan) => {
     const doctor = await doctorModel.findById(plan.docId).select('name speciality')
 
     if (!user || !doctor) return
-    if (!user.phone || user.phone === '0000000000') return
-    const defaultCode = process.env.DEFAULT_COUNTRY_CODE || ''
-    const toNumber = user.phone.startsWith('+') ? user.phone : (defaultCode ? `+${defaultCode}${user.phone}` : null)
-    if (!toNumber) return
-
     const message = `AROGYA reminder: Hi ${user.name}, please follow up with Dr. ${doctor.name} (${doctor.speciality}). Reply to confirm or book your next visit.`
+    await sendSms(user.phone, message)
 
-    await client.messages.create({
-        body: message,
-        from: fromNumber,
-        to: toNumber
-    })
+    const doctorMessage = `AROGYA reminder: Dr. ${doctor.name}, please follow up with patient ${user.name}.`
+    await sendSms(doctor.phone, doctorMessage)
 
     plan.lastReminderAt = new Date()
     await plan.save()
@@ -43,14 +36,13 @@ const startReminderScheduler = () => {
         return
     }
 
-    const client = twilio(accountSid, authToken)
     const reminderHour = process.env.REMINDER_HOUR || '9'
 
     cron.schedule(`0 ${reminderHour} * * *`, async () => {
         try {
             const plans = await carePlanModel.find({ active: true })
             for (const plan of plans) {
-                await sendReminder(client, fromNumber, plan)
+                await sendReminder(plan)
             }
         } catch (error) {
             console.log('Reminder error', error.message)

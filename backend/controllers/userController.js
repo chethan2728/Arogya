@@ -5,6 +5,7 @@ import userModel from '../models/userModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import doctorModel from '../models/doctorModel.js'
 import carePlanModel from '../models/carePlanModel.js';
+import { sendSms } from '../services/smsService.js';
 import razorpay from 'razorpay'
 
 
@@ -159,6 +160,12 @@ const bookAppointment = async (req, res) => {
         if (!existingPlan) {
             await carePlanModel.create({ userId, docId })
         }
+
+        const userMessage = `AROGYA: Your appointment is confirmed with Dr. ${docData.name} (${docData.speciality}) on ${slotDate} at ${slotTime}.`
+        await sendSms(userData.phone, userMessage)
+
+        const doctorMessage = `AROGYA: New appointment booked by ${userData.name} on ${slotDate} at ${slotTime}.`
+        await sendSms(docData.phone, doctorMessage)
 
         res.json({ success: true, message: 'Appointment Booked' })
 

@@ -9,10 +9,10 @@ import carePlanModel from "../models/carePlanModel.js";
 // backend/controllers/adminController.js
 const addDoctor = async (req, res) => {
     try {
-        const { name, email, password, speciality, degree, experience, about, fees, address1, address2 } = req.body
+        const { name, email, password, speciality, degree, experience, about, fees, address1, address2, phone } = req.body
 
         // 1. Validation: Ensure all fields, especially password, are present
-        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address1 || !address2) {
+        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address1 || !address2 || !phone) {
             return res.json({ success: false, message: "Missing Details" });
         }
 
@@ -37,6 +37,7 @@ const addDoctor = async (req, res) => {
             about,
             address: { line1: address1, line2: address2 },
             image: "",
+            phone,
             date: Date.now(),
         };
 
