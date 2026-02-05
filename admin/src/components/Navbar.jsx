@@ -19,17 +19,17 @@ const Navbar = () => {
     dToken && localStorage.removeItem('dToken')
   }
   return (
-    <div className='flex justify-between item-center px-4 sm:px-10 py-3 border-b bg-white'>
+    <div className='flex justify-between item-center px-4 sm:px-10 py-3 border-b border-cyan-200/40 glass-card'>
       <div className='flex items-center gap-2 text-xs'>
-        <div className="w-24 sm:w-28 animate-spin-slow">
+        <div className="w-24 sm:w-28 ">
           <img
-            className="w-full h-full cursor-pointer animate-sparkle"
+            className="w-full h-full cursor-pointer "
             src={assets.admin_logo}
             alt="Admin Logo"
           />
-        </div>        <p className='border px-2.5 py-0.5 rounded-full border-gray-500 text-gray-600'>{aToken ? 'Admin' : 'Doctor'} </p>
+        </div>        <p className='border px-2.5 py-0.5 rounded-full border-cyan-200/40 soft-text'>{aToken ? 'Admin' : 'Doctor'} </p>
       </div>
-      <button onClick={logout} className='bg-primary text-white text-sm px-10 py-2 rounded-full'>Logout</button>
+      <button onClick={logout} className='aqua-button text-deep text-sm px-10 py-2 rounded-full'>Logout</button>
     </div>
   )
 }

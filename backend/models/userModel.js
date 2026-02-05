@@ -9,6 +9,10 @@ const userSchema = new mongoose.Schema({
     dob: {type:String, default:'Not Specified'},
     address: { type: Object, default: {line1:'',line2:''} },
     phone: { type: String, default:'0000000000' },
+    health: {
+        visits: { type: Array, default: [] },
+        records: { type: Array, default: [] }
+    }
 
 
 })

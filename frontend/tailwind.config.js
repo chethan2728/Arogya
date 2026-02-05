@@ -7,7 +7,10 @@ export default {
   theme: {
     extend: {
       colors:{
-        'primary': '#B9A5E2',
+        'primary': '#54E2F6',
+        'deep': '#081A24',
+        'surface': '#0F2A36',
+        'mist': '#A9E8F5',
       },
         gridTemplateColumns: {
           'auto': 'repeat(auto-fit, minmax(150px, 1fr))'

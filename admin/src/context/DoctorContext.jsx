@@ -91,6 +91,19 @@ const DoctorContextProvider = (props) => {
         }
     }
 
+    const endCarePlan = async (userId, reason) => {
+        try {
+            const { data } = await axios.post(backendUrl + '/api/doctor/end-care', { userId, reason }, { headers: { dtoken: dToken } })
+            if (data.success) {
+                toast.success(data.message)
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
+
     const value = {
         dToken, setDToken,
         backendUrl,setAppointments,
@@ -102,7 +115,8 @@ const DoctorContextProvider = (props) => {
         getDashData,setDashData,
         profileData,
         getProfileData,
-        setProfileData
+        setProfileData,
+        endCarePlan
 
 
     }

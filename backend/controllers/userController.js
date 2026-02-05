@@ -4,6 +4,7 @@ import JWT from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import doctorModel from '../models/doctorModel.js'
+import carePlanModel from '../models/carePlanModel.js';
 import razorpay from 'razorpay'
 
 
@@ -154,6 +155,11 @@ const bookAppointment = async (req, res) => {
 
         await doctorModel.findByIdAndUpdate(docId, { slots_booked })
 
+        const existingPlan = await carePlanModel.findOne({ userId, docId, active: true })
+        if (!existingPlan) {
+            await carePlanModel.create({ userId, docId })
+        }
+
         res.json({ success: true, message: 'Appointment Booked' })
 
     } catch (error) {
@@ -256,4 +262,80 @@ const verifyRazorpay = async (req, res) => {
     }
 }
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay}
+const addHealthVisit = async (req, res) => {
+    try {
+        const { userId, date, notes } = req.body
+        if (!date) {
+            return res.json({ success: false, message: "Visit date is required" })
+        }
+        const visit = { date, notes: notes || "", createdAt: Date.now() }
+        await userModel.findByIdAndUpdate(userId, { $push: { "health.visits": visit } })
+        res.json({ success: true, message: "Visit added" })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const addHealthRecord = async (req, res) => {
+    try {
+        const { userId, title, notes } = req.body
+        if (!title) {
+            return res.json({ success: false, message: "Record title is required" })
+        }
+        const record = { title, notes: notes || "", createdAt: Date.now() }
+        await userModel.findByIdAndUpdate(userId, { $push: { "health.records": record } })
+        res.json({ success: true, message: "Record added" })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const getHealth = async (req, res) => {
+    try {
+        const { userId } = req.body
+        const user = await userModel.findById(userId).select('health')
+        const plans = await carePlanModel.find({ userId, active: true })
+        const docIds = plans.map(plan => plan.docId)
+        const doctors = await doctorModel.find({ _id: { $in: docIds } }).select('name speciality')
+        const docMap = doctors.reduce((acc, doc) => {
+            acc[doc._id.toString()] = doc
+            return acc
+        }, {})
+        const activePlans = plans.map(plan => ({
+            _id: plan._id,
+            docId: plan.docId,
+            doctor: docMap[plan.docId] || null,
+            startedAt: plan.startedAt
+        }))
+        res.json({ success: true, health: user?.health || { visits: [], records: [] }, activePlans })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const endCarePlanUser = async (req, res) => {
+    try {
+        const { userId, docId, reason } = req.body
+        if (!docId) {
+            return res.json({ success: false, message: "Doctor ID required" })
+        }
+        const plan = await carePlanModel.findOne({ userId, docId, active: true })
+        if (!plan) {
+            return res.json({ success: false, message: "No active care plan found" })
+        }
+        plan.active = false
+        plan.endedAt = new Date()
+        plan.endedBy = "patient"
+        plan.endedReason = reason || ""
+        await plan.save()
+        res.json({ success: true, message: "Care plan ended" })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, addHealthVisit, addHealthRecord, getHealth, endCarePlanUser }

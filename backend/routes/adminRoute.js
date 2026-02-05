@@ -1,5 +1,5 @@
 import express from "express";
-import { addDoctor,allDoctors,loginAdmin,appointmentsAdmin, appointmentCancel, adminDashboard } from "../controllers/adminController.js"; // You imported 'addDoctor'
+import { addDoctor,allDoctors,loginAdmin,appointmentsAdmin, appointmentCancel, adminDashboard, patientsAdmin } from "../controllers/adminController.js"; // You imported 'addDoctor'
 import authAdmin from "../middleware/authAdmin.js";
 import { changeAvailability } from "../controllers/doctorController.js";
 
@@ -14,6 +14,7 @@ adminRouter.post('/change-availability', authAdmin, changeAvailability);
 adminRouter.get('/appointments', authAdmin, appointmentsAdmin);
 adminRouter.post('/cancel-appointment', authAdmin, appointmentCancel);
 adminRouter.get('/dashboard', authAdmin, adminDashboard);
+adminRouter.get('/patients', authAdmin, patientsAdmin);
 
 
 

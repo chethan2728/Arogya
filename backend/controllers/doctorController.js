@@ -3,6 +3,7 @@ import appointmentModel from "../models/appointmentModel.js"; // Ensure the path
 // Ensure the path is correct
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import carePlanModel from "../models/carePlanModel.js";
 
 const changeAvailability = async (req, res) => {
     try {
@@ -170,4 +171,26 @@ const updateDoctorProfile = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
-export { changeAvailability, doctorList, loginDoctor, appointmentDoctor, appointmentComplete, appointmentCancel, doctorDashboard, doctorProfile, updateDoctorProfile }
+const endCarePlanDoctor = async (req, res) => {
+    try {
+        const { docId, userId, reason } = req.body
+        if (!userId) {
+            return res.json({ success: false, message: "User ID required" })
+        }
+        const plan = await carePlanModel.findOne({ docId, userId, active: true })
+        if (!plan) {
+            return res.json({ success: false, message: "No active care plan found" })
+        }
+        plan.active = false
+        plan.endedAt = new Date()
+        plan.endedBy = "doctor"
+        plan.endedReason = reason || ""
+        await plan.save()
+        res.json({ success: true, message: "Care plan ended" })
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { changeAvailability, doctorList, loginDoctor, appointmentDoctor, appointmentComplete, appointmentCancel, doctorDashboard, doctorProfile, updateDoctorProfile, endCarePlanDoctor }

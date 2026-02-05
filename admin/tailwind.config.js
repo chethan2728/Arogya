@@ -3,7 +3,12 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
-      colors: { 'primary': "#2563EB" },
+      colors: {
+        'primary': '#54E2F6',
+        'deep': '#081A24',
+        'surface': '#0F2A36',
+        'mist': '#A9E8F5',
+      },
       animation: {
         'spin-slow': 'spin 5s linear infinite',
         'sparkle': 'sparkle 1s ease-in-out infinite',

@@ -5,10 +5,11 @@ import axios from 'axios'
 import { useEffect } from 'react'
 import { toast } from "react-toastify";
 import {useNavigate} from 'react-router-dom'
+import { assets } from '../assets/assets'
 
 const MyAppointments = () => {
 
-const { backendUrl, token, getDoctorsData} = useContext(AppContext)
+const { backendUrl, token, getDoctorsData, doctors } = useContext(AppContext)
 
 const [appointments,setAppointments] = useState([])
 const months = ["Jan","Feb","Mar","Apr","May","jun","jul","aug","sep","oct","nov","dec"]
@@ -103,28 +104,32 @@ useEffect(()=>{
 
   return (
     <div>
-      <p className='pb-3 mt-12 font-medium text-zinc-700 border-b'>My appointments</p>
+      <p className='pb-3 mt-12 font-medium surface-text border-b border-cyan-200/30'>My appointments</p>
       <div>
         {appointments.map((item,index)=>(
-          <div className='grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-2 border-b' key={index}>
+          <div className='grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-2 border-b border-cyan-200/20' key={index}>
             <div>
-              <img className='w-32 bg-indigo-50' src={item.docData.image} alt="" />
+              <img
+                className='w-32 bg-sky-900/40 rounded-xl'
+                src={doctors.find(doc => doc._id === item.docId)?.image || assets.profile_pic}
+                alt=""
+              />
             </div>
-            <div className='flex-1 text-sm text-zinc-600'>
-            <p className='text-neutral-800 font-semibold'>{item.docData.name}</p>
+            <div className='flex-1 text-sm soft-text'>
+            <p className='surface-text font-semibold'>{item.docData.name}</p>
             <p>{item.docData.speciality}</p>
-            <p className='text-zinc-700 font-medium mt-1'>Address:</p>
+            <p className='surface-text font-medium mt-1'>Address:</p>
             <p className='text-xs'>{item.docData.address.line1}</p>
             <p className='text-xs'>{item.docData.address.line2}</p>
-            <p className='text-xs mt-1'><span className='text-sm text-neutral-700 font-medium'>Date & Time:</span>{slotDateFormat(item.slotDate)} | {item.slotTime}</p>
+            <p className='text-xs mt-1'><span className='text-sm surface-text font-medium'>Date & Time:</span>{slotDateFormat(item.slotDate)} | {item.slotTime}</p>
             </div>
             <div></div>
             <div className='flex flex-col gap-2 justify-end'>
-              {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-448 py-2 border rounded text-stone-500 bg-indigo-50'>Paid</button>}
-              {!item.cancelled && !item.payment && !item.isCompleted && <button onClick={()=>appointmentRazorpay(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300'>Pay Online</button>}
-              {!item.cancelled && !item.isCompleted && <button onClick={()=>cancelAppointment(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border hover:bg-primary hover:text-white transition-all duration-300'>Cancel appointment</button>}
-              {item.cancelled && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>}
-              {item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-green-600 bg-green-50'>Appointment completed</button>}
+              {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-448 py-2 border rounded soft-text bg-cyan-300/10'>Paid</button>}
+              {!item.cancelled && !item.payment && !item.isCompleted && <button onClick={()=>appointmentRazorpay(item._id)} className='text-sm soft-text text-center sm:min-w-48 py-2 border border-cyan-200/40 hover:bg-cyan-400/10 transition-all duration-300'>Pay Online</button>}
+              {!item.cancelled && !item.isCompleted && <button onClick={()=>cancelAppointment(item._id)} className='text-sm soft-text text-center sm:min-w-48 py-2 border border-cyan-200/40 hover:bg-cyan-400/10 transition-all duration-300'>Cancel appointment</button>}
+              {item.cancelled && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-rose-400/60 rounded text-rose-300'>Appointment cancelled</button>}
+              {item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-emerald-300 bg-emerald-400/10'>Appointment completed</button>}
             </div>
             </div> 
 

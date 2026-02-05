@@ -18,10 +18,10 @@ const AllApointment = () => {
   },[aToken])
 
   return (
-    <div className='w-full max-w-6xl m-5'>
-      <p className='mb-3 ttext-lg font-medium'>AllApointments</p>
-      <div className='bg-white border rounded text-sm max-h-[80vh] min-h-[] overflow-y-scroll'>
-        <div className='hidden sm:grid grid-cols-[0.5fr_3fr_1fr_3fr_3fr_1fr_1fr] grid-flow-col py-3 px-6 border-b'>
+    <div className='w-full max-w-6xl m-5 soft-text'>
+      <p className='mb-3 text-lg font-medium surface-text'>All Appointments</p>
+      <div className='glass-card rounded-2xl text-sm max-h-[80vh] overflow-y-scroll'>
+        <div className='hidden sm:grid grid-cols-[0.5fr_3fr_1fr_3fr_3fr_1fr_1fr] grid-flow-col py-3 px-6 border-b border-cyan-200/10'>
           <p>#</p>
           <p>Patient</p>
           <p>Age</p>
@@ -31,15 +31,15 @@ const AllApointment = () => {
           <p>Actions</p>
         </div>
         {appointments.map((item,index)=>(
-          <div className='flex flex-wrap justify-between max-sm:gap-2 sm:grid sm:grid-cols-[0.5fr_3fr_1fr_3fr_3fr_1fr_1fr] items-center text-gray-500 py-3 px-6 border-b hover:bg-gray-50' key={index}> 
+          <div className='flex flex-wrap justify-between max-sm:gap-2 sm:grid sm:grid-cols-[0.5fr_3fr_1fr_3fr_3fr_1fr_1fr] items-center soft-text py-3 px-6 border-b border-cyan-200/20 hover:bg-cyan-300/5' key={index}> 
             <p className='max-sm:hidden'>{index+1}</p>
             <div className='felx items-center gap-2'>
-              <img className='w-8 rounded-full' src={item.userData.image} alt="" /> <p>{item.userData.name}</p>
+              <img className='w-8 rounded-full bg-sky-900/40' src={item.userData.image} alt="" /> <p>{item.userData.name}</p>
             </div>
             <p className='max-sm:hidden'>{calculateAge(item.userData.dob)}</p>
             <p>{slotDateFormat(item.slotDate)}, {item.slotTime}</p>
             <div className='felx items-center gap-2'>
-              <img className='w-8 rounded-full' src={item.docData.image} alt="" /> <p>{item.docData.name}</p>
+              <img className='w-8 rounded-full bg-sky-900/40' src={item.docData.image} alt="" /> <p>{item.docData.name}</p>
             </div>
             <p>{currency}{item.amount}</p>
             {

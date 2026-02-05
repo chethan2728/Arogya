@@ -1,18 +1,18 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
-import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentModel.js";
 import userModel from "../models/userModel.js";
+import carePlanModel from "../models/carePlanModel.js";
 
 // backend/controllers/adminController.js
 const addDoctor = async (req, res) => {
     try {
-        const { name, email, password, speciality, degree, experience, about, fees, address } = req.body
+        const { name, email, password, speciality, degree, experience, about, fees, address1, address2 } = req.body
 
         // 1. Validation: Ensure all fields, especially password, are present
-        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
+        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address1 || !address2) {
             return res.json({ success: false, message: "Missing Details" });
         }
 
@@ -35,8 +35,8 @@ const addDoctor = async (req, res) => {
             speciality,
             degree,
             about,
-            address,
-            image: " ", // Placeholder since you removed image upload
+            address: { line1: address1, line2: address2 },
+            image: "",
             date: Date.now(),
         };
 
@@ -143,4 +143,36 @@ const adminDashboard = async (req,res) => {
     }
 }
 
-export { addDoctor ,loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard}
+const patientsAdmin = async (req, res) => {
+    try {
+        const users = await userModel.find({}).select('-password')
+        const activePlans = await carePlanModel.find({ active: true })
+        const activeMap = activePlans.reduce((acc, plan) => {
+            acc[plan.userId] = (acc[plan.userId] || 0) + 1
+            return acc
+        }, {})
+
+        const patients = users.map(user => {
+            const visits = user.health?.visits || []
+            const records = user.health?.records || []
+            const lastVisit = visits.length ? visits[visits.length - 1].date : "-"
+            return {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                visitsCount: visits.length,
+                recordsCount: records.length,
+                lastVisit,
+                activeCarePlans: activeMap[user._id.toString()] || 0
+            }
+        })
+
+        res.json({ success: true, patients })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { addDoctor ,loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard, patientsAdmin }

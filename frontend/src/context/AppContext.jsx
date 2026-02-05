@@ -1,6 +1,7 @@
 import { createContext, use, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { doctorImages } from "../assets/assets";
 
 export const AppContext = createContext()
 
@@ -15,11 +16,18 @@ const AppContextProvider = (props) => {
     const [userData, setUserData] = useState(null)
 
 
+    const mapDoctorsWithAssets = (docs) => {
+        return docs.map((doc, index) => ({
+            ...doc,
+            image: doctorImages[index % doctorImages.length],
+        }))
+    }
+
     const getDoctorsData = async () => {
         try {
             const {data} = await axios.get(backendUrl + '/api/doctor/list')
             if(data.success){
-                setDoctors(data.doctors)
+                setDoctors(mapDoctorsWithAssets(data.doctors))
             } else {
                 toast.error(data.message)
             }
