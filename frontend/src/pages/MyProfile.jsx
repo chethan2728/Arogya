@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -7,21 +7,41 @@ const MyProfile = () => {
 
   const { userData, setUserData, token, backendUrl, loadUserProfileData } = useContext(AppContext)
   const [isEdit, setIsEdit] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
+
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview('')
+      return
+    }
+    const objectUrl = URL.createObjectURL(imageFile)
+    setImagePreview(objectUrl)
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [imageFile])
 
   const updateUserProfileData = async () => {
     try {
-      // Sending simple JSON instead of FormData since we removed images
-      const { data } = await axios.post(backendUrl + '/api/user/update-profile', {
-        name: userData.name,
-        phone: userData.phone,
-        dob: userData.dob,
-        gender: userData.gender,
-        address: userData.address // Sent as an object
-      }, { headers: { token } })
+      const formData = new FormData()
+      formData.append('name', userData.name || '')
+      formData.append('phone', userData.phone || '')
+      formData.append('dob', userData.dob || '')
+      formData.append('gender', userData.gender || '')
+      formData.append('address', JSON.stringify(userData.address || {}))
+      if (imageFile) {
+        formData.append('image', imageFile)
+      }
+
+      const { data } = await axios.post(
+        backendUrl + '/api/user/update-profile',
+        formData,
+        { headers: { token } }
+      )
 
       if (data.success) {
         toast.success(data.message)
         await loadUserProfileData()
+        setImageFile(null)
         setIsEdit(false)
       } else {
         toast.error(data.message)
@@ -36,8 +56,20 @@ const MyProfile = () => {
   return userData && (
     <div className='max-w-lg flex flex-col gap-2 text-sm soft-text'>
       
-      {/* Static Profile Image (No upload logic) */}
-      <img className='w-36 rounded-xl bg-sky-900/40' src={userData.image} alt="" />
+      <div className='flex items-center gap-4'>
+        <img className='w-36 h-36 object-cover rounded-xl bg-sky-900/40' src={imagePreview || userData.image} alt="" />
+        {isEdit && (
+          <label className='aqua-outline px-4 py-2 rounded-full cursor-pointer hover:bg-cyan-400/10 transition-all'>
+            Change Photo
+            <input
+              className='hidden'
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            />
+          </label>
+        )}
+      </div>
 
       {
         isEdit

@@ -4,6 +4,7 @@ import appointmentModel from "../models/appointmentModel.js"; // Ensure the path
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import carePlanModel from "../models/carePlanModel.js";
+import uploadImageToCloudinary from "../services/imageService.js";
 
 const changeAvailability = async (req, res) => {
     try {
@@ -162,8 +163,36 @@ const doctorProfile = async (req, res) => {
 const updateDoctorProfile = async (req, res) => {
     try {
         const { docId, fees, address, available, phone } = req.body
-        
-        await doctorModel.findByIdAndUpdate(docId, { fees, address, available, phone })
+        const imageFile = req.file
+
+        let parsedAddress = address
+        if (typeof address === 'string') {
+            try {
+                parsedAddress = JSON.parse(address)
+            } catch (error) {
+                return res.json({ success: false, message: "Invalid address format" })
+            }
+        }
+
+        const updateData = {
+            fees: fees !== undefined ? Number(fees) : undefined,
+            address: parsedAddress,
+            available: typeof available === 'string' ? available === 'true' : available,
+            phone
+        }
+
+        if (imageFile) {
+            const imageUrl = await uploadImageToCloudinary(imageFile, 'arogya/doctors')
+            updateData.image = imageUrl
+        }
+
+        Object.keys(updateData).forEach((key) => {
+            if (updateData[key] === undefined) {
+                delete updateData[key]
+            }
+        })
+
+        await doctorModel.findByIdAndUpdate(docId, updateData)
 
         res.json({ success: true, message: "Profile Updated Successfully" })
     } catch (error) {

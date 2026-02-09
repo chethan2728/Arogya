@@ -7,6 +7,7 @@ import doctorModel from '../models/doctorModel.js'
 import carePlanModel from '../models/carePlanModel.js';
 import { sendSms } from '../services/smsService.js';
 import razorpay from 'razorpay'
+import uploadImageToCloudinary from '../services/imageService.js';
 
 
 // API to register user
@@ -93,13 +94,29 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
     try {
         const { userId, name, phone, address, dob, gender } = req.body;
+        const imageFile = req.file
 
         if (!name || !phone || !dob || !gender) {
             return res.json({ success: false, message: "Missing Details" });
         }
 
-        // Address is already an object because we are sending JSON from the frontend
-        await userModel.findByIdAndUpdate(userId, { name, phone, address, dob, gender });
+        let parsedAddress = address
+        if (typeof address === 'string') {
+            try {
+                parsedAddress = JSON.parse(address)
+            } catch (error) {
+                return res.json({ success: false, message: "Invalid address format" })
+            }
+        }
+
+        const updateData = { name, phone, address: parsedAddress, dob, gender }
+
+        if (imageFile) {
+            const imageUrl = await uploadImageToCloudinary(imageFile, 'arogya/users')
+            updateData.image = imageUrl
+        }
+
+        await userModel.findByIdAndUpdate(userId, updateData);
 
         res.json({ success: true, message: "Profile Updated Successfully" });
 

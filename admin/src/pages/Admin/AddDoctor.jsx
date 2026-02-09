@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { assets } from '../../assets/assets'
 import { AdminContext } from '../../context/AdminContext'
 import { toast } from 'react-toastify'
@@ -17,31 +17,47 @@ const AddDoctor = () => {
     const [address2, setAddress2] = useState('')
     const [about, setAbout] = useState('')
     const [phone, setPhone] = useState('')
+    const [imageFile, setImageFile] = useState(null)
+    const [imagePreview, setImagePreview] = useState('')
 
     const { backendUrl, aToken } = useContext(AdminContext);
+
+    useEffect(() => {
+        if (!imageFile) {
+            setImagePreview('')
+            return
+        }
+        const objectUrl = URL.createObjectURL(imageFile)
+        setImagePreview(objectUrl)
+        return () => URL.revokeObjectURL(objectUrl)
+    }, [imageFile])
 
     const onSubmitHandler = async (event) => {
         event.preventDefault()
 
         try {
-            // Data Transformation to prevent "Cast to Number" and "Cast to String" errors
-            const doctorData = {
-                name,
-                email,
-                password,
-                experience: Number(experience.split(' ')[0]),
-                fees: Number(fees),
-                speciality,
-                degree: education,
-                about,
-                address1,
-                address2,
-                phone
+            if (!imageFile) {
+                toast.error('Doctor image is required')
+                return
             }
+
+            const formData = new FormData()
+            formData.append('name', name)
+            formData.append('email', email)
+            formData.append('password', password)
+            formData.append('experience', experience.split(' ')[0])
+            formData.append('fees', fees)
+            formData.append('speciality', speciality)
+            formData.append('degree', education)
+            formData.append('about', about)
+            formData.append('address1', address1)
+            formData.append('address2', address2)
+            formData.append('phone', phone)
+            formData.append('image', imageFile)
 
             const { data } = await axios.post(
                 backendUrl + '/api/admin/add-doctor',
-                doctorData,
+                formData,
                 { headers: { aToken } }
             )
 
@@ -51,6 +67,7 @@ const AddDoctor = () => {
                 setName(''); setEmail(''); setPassword('');
                 setFees(''); setEducation(''); setAddress1('');
                 setAddress2(''); setAbout(''); setPhone('');
+                setImageFile(null)
             } else {
                 toast.error(data.message)
             }
@@ -70,6 +87,20 @@ const AddDoctor = () => {
                     
                     {/* Left Column */}
                     <div className='w-full lg:flex-1 flex flex-col gap-4'>
+                        <div className='flex-1 flex flex-col gap-1'>
+                            <p>Doctor Image</p>
+                            <label className='flex items-center gap-4 border border-cyan-200/40 rounded px-3 py-3 bg-white/70 surface-text cursor-pointer'>
+                                <img className='w-16 h-16 object-cover rounded-lg' src={imagePreview || assets.upload_area} alt="" />
+                                <span className='text-sm soft-text'>Upload doctor photo</span>
+                                <input
+                                    className='hidden'
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                                    required
+                                />
+                            </label>
+                        </div>
                         <div className='flex-1 flex flex-col gap-1'>
                             <p>Doctor Name</p>
                             <input onChange={(e) => setName(e.target.value)} value={name} className='border border-cyan-200/40 rounded px-3 py-2 bg-white/70 surface-text' type="text" placeholder='Name' required />

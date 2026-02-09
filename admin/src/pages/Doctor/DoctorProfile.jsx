@@ -10,19 +10,39 @@ const DoctorProfile = () => {
   const { dToken, profileData, getProfileData, setProfileData, backendUrl } = useContext(DoctorContext)
   const { currency } = useContext(AppContext)
   const [isEdit, setIsEdit] = useState(false)
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
+
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview('')
+      return
+    }
+    const objectUrl = URL.createObjectURL(imageFile)
+    setImagePreview(objectUrl)
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [imageFile])
 
   const updateProfile = async () => {
     try {
-      const updateData = {
-        address: profileData.address,
-        fees: profileData.fees,
-        available: profileData.available,
-        phone: profileData.phone
+      const formData = new FormData()
+      formData.append('address', JSON.stringify(profileData.address || {}))
+      formData.append('fees', profileData.fees ?? '')
+      formData.append('available', profileData.available ? 'true' : 'false')
+      formData.append('phone', profileData.phone || '')
+      if (imageFile) {
+        formData.append('image', imageFile)
       }
-      const {data} = await axios.post(backendUrl + '/api/doctor/update-profile', updateData, {headers:{dToken}})
+
+      const {data} = await axios.post(
+        backendUrl + '/api/doctor/update-profile',
+        formData,
+        {headers:{dToken}}
+      )
       if (data.success){
         toast.success(data.message)
         getProfileData()
+        setImageFile(null)
         setIsEdit(false)
       } else {
         toast.error(data.message)
@@ -42,12 +62,23 @@ const DoctorProfile = () => {
     <div>
       <div className='flex flex-col gap-4 m-5 soft-text'>
         <div>
-          {profileData.image
-            ? <img className='bg-sky-900/40 w-full sm:max-w-64 rounded-2xl' src={profileData.image} alt="" />
+          {(imagePreview || profileData.image)
+            ? <img className='bg-sky-900/40 w-full sm:max-w-64 rounded-2xl' src={imagePreview || profileData.image} alt="" />
             : <div className='w-full sm:max-w-64 h-56 rounded-2xl bg-cyan-100/60 flex items-center justify-center text-4xl font-semibold text-slate-700'>
                 {profileData.name?.slice(0,1)}
               </div>
           }
+          {isEdit && (
+            <label className='mt-3 inline-flex items-center px-4 py-2 rounded-full aqua-outline cursor-pointer hover:bg-cyan-400/10 transition-all'>
+              Change Photo
+              <input
+                className='hidden'
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+              />
+            </label>
+          )}
         </div>
 
         <div className='flex-1 glass-card rounded-2xl p-8 py-7'>

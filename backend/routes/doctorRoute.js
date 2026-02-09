@@ -1,6 +1,7 @@
 import express from 'express';
 import { doctorList, loginDoctor, appointmentDoctor, appointmentCancel, appointmentComplete, doctorDashboard, doctorProfile, updateDoctorProfile, endCarePlanDoctor} from '../controllers/doctorController.js';
 import authDoctor from '../middleware/authDoctor.js';
+import upload from '../middleware/multer.js';
 
 const doctorRouter = express.Router();
 
@@ -11,7 +12,7 @@ doctorRouter.post('/complete-appointment',authDoctor,appointmentComplete)
 doctorRouter.post('/cancel-appointment',authDoctor,appointmentCancel)
 doctorRouter.get('/dashboard',authDoctor,doctorDashboard)
 doctorRouter.get('/profile',authDoctor,doctorProfile)
-doctorRouter.post('/update-profile',authDoctor,updateDoctorProfile)
+doctorRouter.post('/update-profile',authDoctor, upload.single('image'), updateDoctorProfile)
 doctorRouter.post('/end-care',authDoctor,endCarePlanDoctor)
 
 

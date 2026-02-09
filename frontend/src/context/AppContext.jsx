@@ -19,7 +19,7 @@ const AppContextProvider = (props) => {
     const mapDoctorsWithAssets = (docs) => {
         return docs.map((doc, index) => ({
             ...doc,
-            image: doctorImages[index % doctorImages.length],
+            image: (doc.image && doc.image.trim()) ? doc.image : doctorImages[index % doctorImages.length],
         }))
     }
 

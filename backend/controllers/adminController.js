@@ -5,15 +5,20 @@ import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentModel.js";
 import userModel from "../models/userModel.js";
 import carePlanModel from "../models/carePlanModel.js";
+import uploadImageToCloudinary from "../services/imageService.js";
 
 // backend/controllers/adminController.js
 const addDoctor = async (req, res) => {
     try {
         const { name, email, password, speciality, degree, experience, about, fees, address1, address2, phone } = req.body
+        const imageFile = req.file
 
         // 1. Validation: Ensure all fields, especially password, are present
         if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address1 || !address2 || !phone) {
             return res.json({ success: false, message: "Missing Details" });
+        }
+        if (!imageFile) {
+            return res.json({ success: false, message: "Doctor image is required" });
         }
 
         if (!validator.isEmail(email)) {
@@ -26,6 +31,8 @@ const addDoctor = async (req, res) => {
 
 
         // 3. Prepare Data
+        const imageUrl = await uploadImageToCloudinary(imageFile, 'arogya/doctors')
+
         const doctorData = {
             name,
             email,
@@ -36,7 +43,7 @@ const addDoctor = async (req, res) => {
             degree,
             about,
             address: { line1: address1, line2: address2 },
-            image: "",
+            image: imageUrl,
             phone,
             date: Date.now(),
         };

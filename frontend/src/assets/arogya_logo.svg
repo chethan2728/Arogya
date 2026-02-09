@@ -1,0 +1,34 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 512) rotate(90) scale(560)">
+      <stop offset="0" stop-color="#101826"/>
+      <stop offset="0.6" stop-color="#070C13"/>
+      <stop offset="1" stop-color="#020304"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="300" y1="200" x2="760" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D9F2FF" stop-opacity="0.9"/>
+      <stop offset="0.5" stop-color="#7FCBFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#C8E9FF" stop-opacity="0.65"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="260" y1="180" x2="780" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F4FBFF" stop-opacity="0.9"/>
+      <stop offset="0.4" stop-color="#9FD6FF" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#7CB3D6" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="260" y1="220" x2="760" y2="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="0.6" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="0" y="0" width="1024" height="1024" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="0" stdDeviation="18" flood-color="#7FD0FF" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="48" flood-color="#2A5E88" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="120" fill="url(#bg)"/>
+  <g filter="url(#glow)">
+    <path d="M512 140 L832 900 H702 L640 760 H384 L322 900 H192 L512 140 Z M512 360 L438 600 H586 L512 360 Z" fill="url(#glass)" fill-rule="evenodd"/>
+    <path d="M512 160 L808 900 H724 L666 760 H384 L326 900 H240 L512 160 Z M512 360 L454 580 H570 L512 360 Z" fill="url(#rim)" fill-opacity="0.55" fill-rule="evenodd"/>
+    <path d="M300 300 L724 240 L784 360 L360 420 Z" fill="url(#sheen)"/>
+  </g>
+</svg>
