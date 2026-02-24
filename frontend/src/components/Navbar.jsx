@@ -24,8 +24,8 @@ const NavBar = () => {
   }, [])
 
   return (
-    <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-b-cyan-200/40">
-      <img onClick={()=>navigate('/')} className='w-44 cursor-pointer' src={assets.logo} alt="" />
+    <div className="sticky top-0 z-40 flex items-center justify-between text-sm py-4 mb-5 border-b border-b-cyan-200/40 backdrop-blur-md bg-white/70 px-2 rounded-xl">
+      <img onClick={()=>navigate('/')} className='w-44 cursor-pointer' src={assets.logo} alt="Arogya logo" />
       <ul className='hidden md:flex items-start gap-5 font-medium text-slate-800'>
         <NavLink to='/'>
           <li className='py-1'>HOME</li>
@@ -70,7 +70,7 @@ const NavBar = () => {
         {/*Mobile Mwnu */}
         <div className={` ${showMenu ? 'fixed w-full' : 'h-0 w-0'} md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all`}>
           <div className='flex items-center justify-between px-5 py-6'>
-            <img className='w-36' src={assets.logo} alt="" />
+            <img className='w-36' src={assets.logo} alt="Arogya logo" />
             <img className='w-7' onClick={()=>setShowMenu(false)} src={assets.cross_icon} alt="" />
           </div>
           <ul className='flex flex-col items-center gap-2 mt-5 px-5 text-lg font-medium text-slate-800'>

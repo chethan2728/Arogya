@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="760" viewBox="0 0 1900 760">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#000000" />
+    </marker>
+    <style>
+      .title { font: 700 38px 'Times New Roman', serif; fill: #000; }
+      .heading { font: 700 30px 'Times New Roman', serif; fill: #000; }
+      .body { font: 400 22px 'Times New Roman', serif; fill: #000; }
+      .small { font: 400 20px 'Times New Roman', serif; fill: #000; }
+      .tiny { font: 400 18px 'Times New Roman', serif; fill: #000; }
+      .box { fill: #fff; stroke: #000; stroke-width: 3; }
+      .line { stroke: #000; stroke-width: 3; fill: none; marker-end: url(#arrow); stroke-linecap: round; }
+      .plain { stroke: #000; stroke-width: 3; fill: #fff; }
+    </style>
+  </defs>
+
+  <text x="950" y="62" text-anchor="middle" class="title">High-Level System Architecture</text>
+
+  <!-- Main axis-aligned boxes: equal size and equal horizontal gaps -->
+  <rect x="120" y="190" rx="14" ry="14" width="420" height="300" class="box"/>
+  <rect x="740" y="190" rx="14" ry="14" width="420" height="300" class="box"/>
+  <rect x="1360" y="190" rx="14" ry="14" width="420" height="300" class="box"/>
+
+  <!-- Frontend -->
+  <text x="330" y="245" text-anchor="middle" class="heading">Frontend</text>
+  <text x="330" y="292" text-anchor="middle" class="body">React</text>
+  <text x="330" y="335" text-anchor="middle" class="small">Responsive UI (Tailwind/Material UI)</text>
+  <text x="330" y="372" text-anchor="middle" class="small">State Management (Redux/Context API)</text>
+
+  <!-- Backend -->
+  <text x="950" y="245" text-anchor="middle" class="heading">Backend</text>
+  <text x="950" y="292" text-anchor="middle" class="body">Node.js / Express</text>
+  <text x="950" y="335" text-anchor="middle" class="small">Doctor Booking Service</text>
+  <text x="950" y="372" text-anchor="middle" class="small">Prescription Logic</text>
+  <text x="950" y="409" text-anchor="middle" class="small">RBAC Module</text>
+
+  <!-- Database -->
+  <text x="1570" y="245" text-anchor="middle" class="heading">Database</text>
+  <text x="1570" y="292" text-anchor="middle" class="body">MongoDB</text>
+  <text x="1570" y="335" text-anchor="middle" class="small">Encrypted Health Records (AES-256)</text>
+  <text x="1570" y="372" text-anchor="middle" class="small">Collections, Indexes, Storage</text>
+
+  <!-- AI Engine -->
+  <rect x="820" y="560" rx="14" ry="14" width="260" height="170" class="box"/>
+  <text x="950" y="610" text-anchor="middle" class="heading">AI Engine</text>
+  <text x="950" y="645" text-anchor="middle" class="tiny">- Natural Language Processing (NLP)</text>
+  <text x="950" y="672" text-anchor="middle" class="tiny">- Predictive Analysis Engine</text>
+  <text x="950" y="699" text-anchor="middle" class="tiny">- Symptom Mapping</text>
+
+  <!-- External services cloud -->
+  <ellipse cx="1690" cy="110" rx="70" ry="40" class="plain"/>
+  <ellipse cx="1738" cy="118" rx="78" ry="48" class="plain"/>
+  <ellipse cx="1642" cy="126" rx="58" ry="36" class="plain"/>
+  <ellipse cx="1700" cy="152" rx="108" ry="46" class="plain"/>
+  <text x="1700" y="132" text-anchor="middle" class="tiny">External Services</text>
+  <text x="1700" y="156" text-anchor="middle" class="tiny">SMS API, Auth API</text>
+
+  <!-- Arrows and labels with buffer zones -->
+  <line x1="540" y1="300" x2="740" y2="300" class="line"/>
+  <rect x="566" y="252" width="148" height="42" fill="#fff"/>
+  <text x="640" y="272" text-anchor="middle" class="tiny">User Requests &amp;</text>
+  <text x="640" y="289" text-anchor="middle" class="tiny">Symptom Data</text>
+
+  <line x1="1160" y1="300" x2="1360" y2="300" class="line"/>
+  <rect x="1184" y="262" width="152" height="26" fill="#fff"/>
+  <text x="1260" y="281" text-anchor="middle" class="tiny">Secure CRUD Operations</text>
+
+  <line x1="950" y1="490" x2="950" y2="560" class="line"/>
+  <rect x="818" y="504" width="264" height="30" fill="#fff"/>
+  <text x="950" y="524" text-anchor="middle" class="tiny">Feature Extraction &amp; Query</text>
+
+  <line x1="1030" y1="560" x2="1030" y2="490" class="line"/>
+  <rect x="1052" y="504" width="266" height="30" fill="#fff"/>
+  <text x="1185" y="524" text-anchor="middle" class="tiny">Diagnostic Insights/Prescription Generation</text>
+
+  <line x1="1160" y1="245" x2="1600" y2="170" class="line"/>
+  <rect x="1346" y="178" width="130" height="24" fill="#fff"/>
+  <text x="1411" y="195" text-anchor="middle" class="tiny">3rd-Party API Integrations</text>
+</svg>

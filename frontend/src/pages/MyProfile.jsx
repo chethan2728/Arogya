@@ -9,6 +9,7 @@ const MyProfile = () => {
   const [isEdit, setIsEdit] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState('')
+  const [imageNonce, setImageNonce] = useState(0)
 
   useEffect(() => {
     if (!imageFile) {
@@ -40,7 +41,12 @@ const MyProfile = () => {
 
       if (data.success) {
         toast.success(data.message)
-        await loadUserProfileData()
+        if (data.user) {
+          setUserData(data.user)
+        } else {
+          await loadUserProfileData()
+        }
+        setImageNonce(Date.now())
         setImageFile(null)
         setIsEdit(false)
       } else {
@@ -53,11 +59,22 @@ const MyProfile = () => {
     }
   }
 
+  const profileImageSrc = (() => {
+    if (imagePreview) return imagePreview
+    if (!userData?.image) return ''
+    const sep = userData.image.includes('?') ? '&' : '?'
+    return `${userData.image}${sep}v=${imageNonce}`
+  })()
+
   return userData && (
     <div className='max-w-lg flex flex-col gap-2 text-sm soft-text'>
       
       <div className='flex items-center gap-4'>
-        <img className='w-36 h-36 object-cover rounded-xl bg-sky-900/40' src={imagePreview || userData.image} alt="" />
+        <img
+          className='w-36 h-36 object-cover rounded-xl bg-sky-900/40'
+          src={profileImageSrc}
+          alt=""
+        />
         {isEdit && (
           <label className='aqua-outline px-4 py-2 rounded-full cursor-pointer hover:bg-cyan-400/10 transition-all'>
             Change Photo

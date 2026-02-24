@@ -6,6 +6,7 @@ import appointmentModel from "../models/appointmentModel.js";
 import userModel from "../models/userModel.js";
 import carePlanModel from "../models/carePlanModel.js";
 import uploadImageToCloudinary from "../services/imageService.js";
+import { calculateDashboardMetrics } from "../services/metricsService.js";
 
 // backend/controllers/adminController.js
 const addDoctor = async (req, res) => {
@@ -136,12 +137,15 @@ const adminDashboard = async (req,res) => {
         const doctors = await doctorModel.find({})
         const users = await userModel.find({})
         const appointments = await appointmentModel.find({})
+        const carePlans = await carePlanModel.find({})
+        const metrics = calculateDashboardMetrics({ appointments, carePlans })
 
         const dashData = {
             doctors: doctors.length,
             appointments:appointments.length,
             patients: users.length,
-            latestAppointments: appointments.reverse().slice(0,5)
+            latestAppointments: appointments.reverse().slice(0,5),
+            metrics
         }
 
         res.json({success:true,dashData})

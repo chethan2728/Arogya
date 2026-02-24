@@ -51,6 +51,42 @@ const cancelAppointment = async (appointmentId) => {
   }
 }
 
+const confirmAttendance = async (appointmentId) => {
+  try {
+    const { data } = await axios.post(
+      backendUrl + '/api/user/appointments/confirm-attendance',
+      { appointmentId },
+      { headers: { token } }
+    )
+    if (data.success) {
+      toast.success(data.message)
+      getUserAppointments()
+    } else {
+      toast.error(data.message)
+    }
+  } catch (error) {
+    toast.error(error.message)
+  }
+}
+
+const requestReschedule = async (appointmentId) => {
+  try {
+    const { data } = await axios.post(
+      backendUrl + '/api/user/appointments/request-reschedule',
+      { appointmentId },
+      { headers: { token } }
+    )
+    if (data.success) {
+      toast.success(data.message)
+      getUserAppointments()
+    } else {
+      toast.error(data.message)
+    }
+  } catch (error) {
+    toast.error(error.message)
+  }
+}
+
 const initPay = (order) => {
   const options = {
     key:import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -67,8 +103,11 @@ const initPay = (order) => {
       try {
         const {data} = await axios.post(backendUrl+'/api/user/verifyRazorpay',response,{headers:{token}}) 
         if (data.success) {
+          toast.success(data.message || 'Payment verified')
           getUserAppointments()
           navigate('/my-appointments')
+        } else {
+          toast.error(data.message || 'Payment verification failed')
         }
       } catch (error) {
         console.log(error)
@@ -127,6 +166,10 @@ useEffect(()=>{
             <div className='flex flex-col gap-2 justify-end'>
               {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-448 py-2 border rounded soft-text bg-cyan-300/10'>Paid</button>}
               {!item.cancelled && !item.payment && !item.isCompleted && <button onClick={()=>appointmentRazorpay(item._id)} className='text-sm soft-text text-center sm:min-w-48 py-2 border border-cyan-200/40 hover:bg-cyan-400/10 transition-all duration-300'>Pay Online</button>}
+              {!item.cancelled && !item.isCompleted && !item.attendanceConfirmed && <button onClick={() => confirmAttendance(item._id)} className='text-sm soft-text text-center sm:min-w-48 py-2 border border-emerald-300/40 hover:bg-emerald-400/10 transition-all duration-300'>Confirm attendance</button>}
+              {!item.cancelled && !item.isCompleted && !item.rescheduleRequested && <button onClick={() => requestReschedule(item._id)} className='text-sm soft-text text-center sm:min-w-48 py-2 border border-amber-300/40 hover:bg-amber-400/10 transition-all duration-300'>Request reschedule</button>}
+              {item.attendanceConfirmed && <button className='sm:min-w-48 py-2 border rounded text-emerald-300 bg-emerald-400/10'>Attendance confirmed</button>}
+              {item.rescheduleRequested && <button className='sm:min-w-48 py-2 border rounded text-amber-300 bg-amber-400/10'>Reschedule requested</button>}
               {!item.cancelled && !item.isCompleted && <button onClick={()=>cancelAppointment(item._id)} className='text-sm soft-text text-center sm:min-w-48 py-2 border border-cyan-200/40 hover:bg-cyan-400/10 transition-all duration-300'>Cancel appointment</button>}
               {item.cancelled && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-rose-400/60 rounded text-rose-300'>Appointment cancelled</button>}
               {item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-emerald-300 bg-emerald-400/10'>Appointment completed</button>}

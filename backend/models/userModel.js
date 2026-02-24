@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema({
     health: {
         visits: { type: Array, default: [] },
         records: { type: Array, default: [] }
+    },
+    aiMemory: {
+        preferredName: { type: String, default: '' },
+        preferences: {
+            budget: { type: Number, default: null },
+            speciality: { type: String, default: '' },
+            timePreference: { type: String, default: '' }
+        },
+        updatedAt: { type: Date, default: null }
     }
 
 

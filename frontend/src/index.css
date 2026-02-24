@@ -13,11 +13,19 @@ body{
         radial-gradient(900px 500px at 90% 0%, rgba(169, 232, 245, 0.18), transparent 55%),
         linear-gradient(180deg, #ffffff 0%, #f6fbff 60%, #eef7ff 100%);
     color: #0f172a;
+    min-height: 100vh;
 }
 
 .futurist-title{
     font-family: "Space Grotesk", Outfit, sans-serif;
     letter-spacing: 0.02em;
+}
+
+.hero-gradient-text{
+    background: linear-gradient(110deg, #082f49 0%, #0369a1 45%, #06b6d4 85%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .glass-card{
@@ -27,9 +35,57 @@ body{
     backdrop-filter: blur(12px);
 }
 
+.scene-3d{
+    perspective: 1200px;
+}
+
+.tilt-card{
+    transform-style: preserve-3d;
+    transition: transform 450ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 450ms ease, border-color 450ms ease;
+}
+
+.tilt-card:hover{
+    transform: translateY(-8px) rotateX(4deg) rotateY(-4deg) scale(1.01);
+    box-shadow: 0 28px 65px rgba(5, 45, 74, 0.2);
+    border-color: rgba(34, 211, 238, 0.45);
+}
+
+.neon-outline{
+    position: relative;
+}
+
+.neon-outline::after{
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(125deg, rgba(34, 211, 238, 0.55), rgba(14, 165, 233, 0.15), rgba(34, 211, 238, 0.45));
+    filter: blur(10px);
+    z-index: -1;
+    opacity: 0.7;
+}
+
 .aqua-button{
     background: linear-gradient(135deg, rgba(84, 226, 246, 0.95), rgba(40, 160, 220, 0.95));
     box-shadow: 0 15px 35px rgba(31, 169, 209, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.aqua-button::before{
+    content: "";
+    position: absolute;
+    top: -120%;
+    left: -30%;
+    width: 45%;
+    height: 300%;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform: rotate(24deg);
+    transition: left 500ms ease;
+}
+
+.aqua-button:hover::before{
+    left: 115%;
 }
 
 .aqua-outline{
@@ -95,6 +151,202 @@ body{
     top: 0;
 }
 
+.glow-ring{
+    box-shadow: 0 0 20px rgba(84, 226, 246, 0.55), 0 0 60px rgba(84, 226, 246, 0.18);
+}
+
+.orb-float{
+    animation: drift 8s ease-in-out infinite;
+}
+
+.ring-spin{
+    animation: spin-slow 9s linear infinite;
+}
+
+.backdrop-grid{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(56, 189, 248, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(56, 189, 248, 0.055) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(circle at 50% 35%, rgba(0,0,0,0.7), transparent 85%);
+    z-index: -1;
+}
+
+.hero-noise{
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.26), transparent 38%),
+      radial-gradient(circle at 85% 30%, rgba(6,182,212,0.16), transparent 40%),
+      radial-gradient(circle at 40% 85%, rgba(14,165,233,0.14), transparent 35%);
+}
+
+.alphabet-wall{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(80px, 1fr));
+    gap: 12px;
+    max-width: 320px;
+    transform: perspective(900px) rotateY(-12deg) rotateX(8deg);
+}
+
+.alpha-cube{
+    height: 86px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Space Grotesk", Outfit, sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0c4a6e;
+    background: linear-gradient(155deg, rgba(255,255,255,0.95), rgba(186,230,253,0.75));
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    box-shadow:
+      0 14px 24px rgba(3, 105, 161, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      inset 0 -10px 16px rgba(14, 165, 233, 0.12);
+    animation: cube-rise 700ms ease both;
+}
+
+.lead-pill{
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #075985;
+    background: rgba(186, 230, 253, 0.45);
+    border: 1px solid rgba(14, 165, 233, 0.35);
+    border-radius: 999px;
+    padding: 8px 12px;
+}
+
+.hero-metric{
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(14, 165, 233, 0.25);
+    box-shadow: 0 10px 20px rgba(2, 132, 199, 0.12);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+.med-plus-3d{
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #22d3ee, #0284c7);
+    box-shadow:
+      0 8px 18px rgba(2, 132, 199, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -3px 8px rgba(3, 105, 161, 0.35);
+    position: relative;
+    transform: translateZ(0) rotateX(12deg) rotateY(-12deg);
+}
+
+.med-plus-3d::before,
+.med-plus-3d::after{
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 999px;
+}
+
+.med-plus-3d::before{
+    width: 14px;
+    height: 4px;
+}
+
+.med-plus-3d::after{
+    width: 4px;
+    height: 14px;
+}
+
+.watery-logo-shell{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.52), rgba(207,250,254,0.34));
+    border: 1px solid rgba(125, 211, 252, 0.45);
+    backdrop-filter: blur(10px) saturate(140%);
+    box-shadow:
+      0 8px 22px rgba(2, 132, 199, 0.2),
+      inset 0 1px 0 rgba(255,255,255,0.6),
+      inset 0 -8px 18px rgba(14, 165, 233, 0.1);
+    overflow: hidden;
+}
+
+.watery-logo-shell::before{
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 10%;
+    width: 55%;
+    height: 34%;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.02));
+    pointer-events: none;
+}
+
+.watery-logo-shell::after{
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: radial-gradient(circle at 20% 15%, rgba(255,255,255,0.35), transparent 46%);
+    pointer-events: none;
+}
+
+.logo-plus-backdrop{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 38px;
+    height: 38px;
+    transform: translate(-50%, -50%) rotateX(14deg) rotateY(-12deg);
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(34, 211, 238, 0.34), rgba(2, 132, 199, 0.24));
+    box-shadow:
+      0 8px 18px rgba(2, 132, 199, 0.2),
+      inset 0 1px 0 rgba(255,255,255,0.5),
+      inset 0 -7px 14px rgba(3, 105, 161, 0.22);
+    z-index: 0;
+}
+
+.logo-plus-backdrop::before,
+.logo-plus-backdrop::after{
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,0.9);
+    border-radius: 999px;
+}
+
+.logo-plus-backdrop::before{
+    width: 18px;
+    height: 5px;
+}
+
+.logo-plus-backdrop::after{
+    width: 5px;
+    height: 18px;
+}
+
+.watery-logo-shell img{
+    position: relative;
+    z-index: 1;
+}
+
 @keyframes slide-in{
     0%{ transform: translateX(-120px); opacity: 0; }
     100%{ transform: translateX(0); opacity: 1; }
@@ -105,8 +357,19 @@ body{
     50%{ transform: rotate(45deg) scale(1.12); }
 }
 
-.glow-ring{
-    box-shadow: 0 0 20px rgba(84, 226, 246, 0.55), 0 0 60px rgba(84, 226, 246, 0.18);
+@keyframes drift{
+    0%, 100%{ transform: translate3d(0, 0, 0) scale(1); }
+    50%{ transform: translate3d(0, -12px, 0) scale(1.04); }
+}
+
+@keyframes spin-slow{
+    from{ transform: rotate(0deg); }
+    to{ transform: rotate(360deg); }
+}
+
+@keyframes cube-rise{
+    0%{ opacity: 0; transform: translateY(16px) scale(0.95); }
+    100%{ opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .active hr{
@@ -120,5 +383,30 @@ body{
 @media (max-width:740px) {
     .active p{
         @apply text-white bg-primary
+    }
+
+    .tilt-card:hover{
+        transform: translateY(-4px);
+    }
+
+    .alphabet-wall{
+      transform: none;
+      max-width: 280px;
+      grid-template-columns: repeat(3, minmax(70px, 1fr));
+    }
+
+    .alpha-cube{
+      height: 72px;
+      font-size: 1.55rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .tilt-card,
+    .aqua-button::before,
+    .orb-float,
+    .ring-spin{
+        animation: none !important;
+        transition: none !important;
     }
 }

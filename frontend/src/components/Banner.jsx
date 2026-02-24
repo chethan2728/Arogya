@@ -7,11 +7,11 @@ const Banner = () => {
   const navigate = useNavigate()
 
   return (
-    <div className='relative overflow-hidden flex glass-card rounded-2xl px-6 sm:px-10 md:px-14 lg:px-12 my-20 md:mx-10'>
-      <div className='absolute -top-12 right-10 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl'></div>
+    <div className='relative overflow-hidden flex glass-card rounded-2xl px-6 sm:px-10 md:px-14 lg:px-12 my-20 md:mx-10 tilt-card neon-outline'>
+      <div className='absolute -top-12 right-10 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl orb-float'></div>
       {/* ---------- Left Side ----------*/}
         <div className='flex-1 py-8 sm:py-10 md:py-16 lg:py-24 lg:pl-5'>
-            <div className='text-xl sm:text-2xl md:text-3xl lg:text-5xl font-semibold surface-text futurist-title'>
+            <div className='text-xl sm:text-2xl md:text-3xl lg:text-5xl font-semibold futurist-title hero-gradient-text'>
                 <p>Book Appointment</p>
                 <p className='mt-4'>With 100+ Trusted Doctors</p>
             </div>

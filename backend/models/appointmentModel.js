@@ -11,7 +11,14 @@ const appointmentSchema = new mongoose.Schema({
     date: { type: Number, required: true },
     cancelled: { type: Boolean, default: false },
     payment: { type: Boolean, default: false },
-    isCompleted: { type: Boolean, default: false }
+    isCompleted: { type: Boolean, default: false },
+    attendanceConfirmed: { type: Boolean, default: false },
+    rescheduleRequested: { type: Boolean, default: false },
+    remindersSent: {
+        h24: { type: Boolean, default: false },
+        h2: { type: Boolean, default: false },
+        m30: { type: Boolean, default: false }
+    }
 })
 
 // Checking if the model exists before creating a new one to avoid errors during hot-reloads

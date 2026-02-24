@@ -27,7 +27,10 @@ const App = () => {
   }, [])
 
   return (
-    <div className="mx-4 sm:mx-[10%] min-h-screen text-slate-900">
+    <div className="mx-4 sm:mx-[10%] min-h-screen text-slate-900 relative scene-3d">
+      <div className="backdrop-grid"></div>
+      <div className="fixed left-[-120px] top-24 w-72 h-72 rounded-full bg-cyan-300/20 blur-3xl orb-float pointer-events-none -z-10"></div>
+      <div className="fixed right-[-90px] bottom-24 w-72 h-72 rounded-full bg-sky-400/20 blur-3xl orb-float pointer-events-none -z-10"></div>
       {showIntro && <IntroSplash />}
       <ToastContainer />
       <NavBar />

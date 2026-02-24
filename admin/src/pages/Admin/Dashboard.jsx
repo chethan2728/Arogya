@@ -45,6 +45,25 @@ const Dashboard = () => {
         </div>
       </div>
 
+      <div className='grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4'>
+        <div className='glass-card p-4 rounded-2xl'>
+          <p className='text-xs soft-text'>Booking Success Rate</p>
+          <p className='text-2xl font-semibold surface-text'>{dashData.metrics?.bookingSuccessRate ?? 0}%</p>
+        </div>
+        <div className='glass-card p-4 rounded-2xl'>
+          <p className='text-xs soft-text'>No-show %</p>
+          <p className='text-2xl font-semibold surface-text'>{dashData.metrics?.noShowRate ?? 0}%</p>
+        </div>
+        <div className='glass-card p-4 rounded-2xl'>
+          <p className='text-xs soft-text'>Reminder Effectiveness</p>
+          <p className='text-2xl font-semibold surface-text'>{dashData.metrics?.reminderEffectiveness ?? 0}%</p>
+        </div>
+        <div className='glass-card p-4 rounded-2xl'>
+          <p className='text-xs soft-text'>Median Time-to-book</p>
+          <p className='text-2xl font-semibold surface-text'>{dashData.metrics?.medianTimeToBookHours ?? 0}h</p>
+        </div>
+      </div>
+
       <div className='glass-card rounded-2xl mt-10'>
         <div className='flex item-center gap-2.5 px-4 py-4 rounded-t border-b border-cyan-200/10'>
           <img src={assets.list_icon} alt="" />

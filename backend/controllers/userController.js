@@ -8,6 +8,89 @@ import carePlanModel from '../models/carePlanModel.js';
 import { sendSms } from '../services/smsService.js';
 import razorpay from 'razorpay'
 import uploadImageToCloudinary from '../services/imageService.js';
+import uploadReportToCloudinary from '../services/reportUploadService.js';
+import { analyzeSymptomsNLP } from '../services/nlpTriageService.js';
+import { verifyRazorpaySignature } from '../services/paymentService.js';
+import { parseSlotDateTime } from '../services/appointmentUtils.js';
+import { buildAiChatResponse } from '../services/aiChatService.js';
+import { generateNaturalReply } from '../services/llmReplyService.js';
+
+const blockedNameWords = new Set([
+    'vomiting', 'vomit', 'fever', 'pain', 'rash', 'itch', 'nausea', 'dizzy', 'headache',
+    'cough', 'cold', 'disease', 'symptom'
+])
+
+const isAllowedAssistantName = (value = '') => {
+    const trimmed = value.trim()
+    const lower = trimmed.toLowerCase()
+    if (!trimmed) return false
+    if (blockedNameWords.has(lower)) return false
+    return /^[a-zA-Z][a-zA-Z\s]{1,39}$/.test(trimmed)
+}
+
+const getResolvedDisplayName = (user) => {
+    const preferred = user?.aiMemory?.preferredName || ''
+    if (isAllowedAssistantName(preferred)) return preferred
+    return user?.name || ''
+}
+
+const computeAdherenceStreak = (visits = []) => {
+    const dates = visits
+        .map((v) => {
+            const dt = new Date(v.date)
+            if (Number.isNaN(dt.getTime())) return null
+            return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime()
+        })
+        .filter(Boolean)
+        .sort((a, b) => b - a)
+
+    if (!dates.length) return 0
+    let streak = 1
+    for (let i = 0; i < dates.length - 1; i += 1) {
+        const diffDays = Math.round((dates[i] - dates[i + 1]) / (1000 * 60 * 60 * 24))
+        if (diffDays <= 1) streak += 1
+        else break
+    }
+    return streak
+}
+
+const buildFollowupTimeline = (appointments = [], health = { records: [] }) => {
+    const completed = appointments
+        .filter((a) => a.isCompleted)
+        .sort((a, b) => b.date - a.date)
+
+    if (!completed.length) return []
+
+    const latest = completed[0]
+    const base = new Date(latest.date)
+    const hasRecentRecord = (days) => {
+        const windowStart = new Date(base.getTime() + days * 24 * 60 * 60 * 1000)
+        return (health.records || []).some((r) => new Date(r.createdAt) >= windowStart)
+    }
+
+    const mkDate = (days) => new Date(base.getTime() + days * 24 * 60 * 60 * 1000)
+
+    return [
+        {
+            id: 'upload_reports',
+            title: 'Upload reports',
+            dueAt: mkDate(3),
+            status: hasRecentRecord(1) ? 'done' : 'pending'
+        },
+        {
+            id: 'adherence_check',
+            title: 'Medication adherence check-in',
+            dueAt: mkDate(7),
+            status: hasRecentRecord(5) ? 'done' : 'pending'
+        },
+        {
+            id: 'next_visit',
+            title: 'Book follow-up consultation',
+            dueAt: mkDate(30),
+            status: 'pending'
+        }
+    ]
+}
 
 
 // API to register user
@@ -116,9 +199,9 @@ const updateProfile = async (req, res) => {
             updateData.image = imageUrl
         }
 
-        await userModel.findByIdAndUpdate(userId, updateData);
+        const updatedUser = await userModel.findByIdAndUpdate(userId, updateData, { new: true }).select('-password')
 
-        res.json({ success: true, message: "Profile Updated Successfully" });
+        res.json({ success: true, message: "Profile Updated Successfully", user: updatedUser });
 
     } catch (error) {
         console.log(error);
@@ -131,36 +214,49 @@ const bookAppointment = async (req, res) => {
 
         const { userId, docId, slotDate, slotTime } = req.body
 
-        const docData = await doctorModel.findById(docId).select('-password')
+        if (!docId || !slotDate || !slotTime) {
+            return res.json({ success: false, message: 'Missing booking details' })
+        }
 
+        const docData = await doctorModel.findById(docId).select('-password')
+        if (!docData) {
+            return res.json({ success: false, message: 'Doctor not found' })
+        }
         if (!docData.available) {
             return res.json({ success: false, message: 'Doctor not availabel' })
         }
-        if (!docData.available) {
-            return res.json({ success: false, message: "Doctor not available at the moment" });
-        }
 
-        let slots_booked = docData.slots_booked
-
-        if (slots_booked[slotDate]) {
-            if (slots_booked[slotDate].includes(slotTime)) {
-                return res.json({ success: false, message: 'Slot not available' })
-            } else {
-                slots_booked[slotDate].push(slotTime)
+        // Atomic slot lock: only reserve if doctor is available and slot is not already booked.
+        const slotPath = `slots_booked.${slotDate}`
+        const lockResult = await doctorModel.updateOne(
+            {
+                _id: docId,
+                available: true,
+                [slotPath]: { $ne: slotTime }
+            },
+            {
+                $push: { [slotPath]: slotTime }
             }
-        } else {
-            slots_booked[slotDate] = []
-            slots_booked[slotDate].push(slotTime)
+        )
+
+        if (!lockResult.modifiedCount) {
+            return res.json({ success: false, message: 'Slot not available' })
         }
 
         const userData = await userModel.findById(userId).select('-password')
+        if (!userData) {
+            // Best effort rollback of slot lock if user is invalid.
+            await doctorModel.updateOne({ _id: docId }, { $pull: { [slotPath]: slotTime } })
+            return res.json({ success: false, message: 'User not found' })
+        }
 
-        delete docData.slots_booked
+        const doctorSnapshot = docData.toObject()
+        delete doctorSnapshot.slots_booked
 
         const appoitmentData = {
             userId,
             docId,
-            docData,
+            docData: doctorSnapshot,
             userData,
             amount: docData.fees,
             slotTime,
@@ -170,8 +266,6 @@ const bookAppointment = async (req, res) => {
 
         const newAppointment = new appointmentModel(appoitmentData)
         await newAppointment.save()
-
-        await doctorModel.findByIdAndUpdate(docId, { slots_booked })
 
         const existingPlan = await carePlanModel.findOne({ userId, docId, active: true })
         if (!existingPlan) {
@@ -270,16 +364,36 @@ const paymentRazorpay = async (req, res) => {
 
 const verifyRazorpay = async (req, res) => {
     try {
-        const {razorpay_order_id} = req.body
+        const { userId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.json({ success: false, message: "Invalid payment payload" })
+        }
+
+        const isSignatureValid = verifyRazorpaySignature({
+            orderId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+            signature: razorpay_signature,
+            secret: process.env.RAZORPAY_KEY_SECRET,
+        })
+        if (!isSignatureValid) {
+            return res.json({ success: false, message: "Payment signature verification failed" })
+        }
+
         const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id)
      
-        if (orderInfo.status == 'paid') {
-            await appointmentModel.findByIdAndUpdate(orderInfo.receipt,{payment:true})
-            res.json({success:true,message:"payment successful"})
-        } else{
-            res.json({success:true,message:"payment failed"})
-
+        if (orderInfo.status === 'paid') {
+            const appointmentId = orderInfo.receipt
+            const appointment = await appointmentModel.findById(appointmentId)
+            if (!appointment) {
+                return res.json({ success: false, message: "Appointment not found for payment" })
+            }
+            if (String(appointment.userId) !== String(userId)) {
+                return res.json({ success: false, message: "Unauthorized payment verification" })
+            }
+            await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true })
+            return res.json({ success: true, message: "payment successful" })
         }
+        return res.json({ success: false, message: "payment failed" })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message });
@@ -304,10 +418,21 @@ const addHealthVisit = async (req, res) => {
 const addHealthRecord = async (req, res) => {
     try {
         const { userId, title, notes } = req.body
-        if (!title) {
-            return res.json({ success: false, message: "Record title is required" })
+        const reportFile = req.file
+        if (!title && !reportFile) {
+            return res.json({ success: false, message: "Record title or report file is required" })
         }
-        const record = { title, notes: notes || "", createdAt: Date.now() }
+        let reportUrl = ''
+        if (reportFile) {
+            reportUrl = await uploadReportToCloudinary(reportFile, 'arogya/reports')
+        }
+        const record = {
+            title: title || reportFile?.originalname || "Uploaded report",
+            notes: notes || "",
+            fileUrl: reportUrl,
+            fileName: reportFile?.originalname || "",
+            createdAt: Date.now()
+        }
         await userModel.findByIdAndUpdate(userId, { $push: { "health.records": record } })
         res.json({ success: true, message: "Record added" })
     } catch (error) {
@@ -320,6 +445,7 @@ const getHealth = async (req, res) => {
     try {
         const { userId } = req.body
         const user = await userModel.findById(userId).select('health')
+        const appointments = await appointmentModel.find({ userId })
         const plans = await carePlanModel.find({ userId, active: true })
         const docIds = plans.map(plan => plan.docId)
         const doctors = await doctorModel.find({ _id: { $in: docIds } }).select('name speciality')
@@ -333,7 +459,30 @@ const getHealth = async (req, res) => {
             doctor: docMap[plan.docId] || null,
             startedAt: plan.startedAt
         }))
-        res.json({ success: true, health: user?.health || { visits: [], records: [] }, activePlans })
+
+        const now = new Date()
+        const upcomingAppointments = appointments.filter((a) => {
+            if (a.cancelled) return false
+            const slotAt = parseSlotDateTime(a.slotDate, a.slotTime)
+            return slotAt && slotAt > now
+        }).length
+        const completedAppointments = appointments.filter((a) => a.isCompleted).length
+        const adherenceStreak = computeAdherenceStreak(user?.health?.visits || [])
+        const followupTimeline = buildFollowupTimeline(appointments, user?.health || { records: [] })
+        const pendingActions = followupTimeline.filter((f) => f.status === 'pending').length
+
+        res.json({
+            success: true,
+            health: user?.health || { visits: [], records: [] },
+            activePlans,
+            progress: {
+                upcomingAppointments,
+                completedAppointments,
+                adherenceStreak,
+                pendingActions
+            },
+            followupTimeline
+        })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
@@ -362,4 +511,204 @@ const endCarePlanUser = async (req, res) => {
     }
 }
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, addHealthVisit, addHealthRecord, getHealth, endCarePlanUser }
+const analyzeSymptoms = async (req, res) => {
+    try {
+        const { symptoms } = req.body
+        if (!symptoms || !symptoms.trim()) {
+            return res.json({ success: false, message: "Symptoms are required" })
+        }
+
+        const analysis = analyzeSymptomsNLP(symptoms)
+        if (analysis.emergencyEscalation) {
+            analysis.escalationMessage = 'Possible emergency indicators detected. Please seek emergency care immediately or call local emergency services.'
+        }
+        res.json({ success: true, analysis })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const aiChat = async (req, res) => {
+    try {
+        const { userId, message, context = {} } = req.body
+        if (!message || !message.trim()) {
+            return res.json({ success: false, message: "Message is required" })
+        }
+
+        const user = await userModel.findById(userId).select('name aiMemory')
+        if (!user) {
+            return res.json({ success: false, message: "User not found" })
+        }
+
+        const displayName = getResolvedDisplayName(user)
+        const decision = buildAiChatResponse({ message, context, displayName })
+        const naturalReply = await generateNaturalReply({ message, displayName, decision })
+
+        let nameStatusMessage = null
+        if (decision.nameCandidate) {
+            if (user.aiMemory?.preferredName) {
+                nameStatusMessage = "Name memory is already set for this account. Use profile update if you need to change it."
+            } else {
+                await userModel.findByIdAndUpdate(userId, {
+                    $set: {
+                        "aiMemory.preferredName": decision.nameCandidate,
+                        "aiMemory.updatedAt": new Date()
+                    }
+                })
+                nameStatusMessage = `Nice to meet you, ${decision.nameCandidate}. I will remember your name next time too.`
+            }
+        }
+
+        if (decision.preferences) {
+            const update = { "aiMemory.updatedAt": new Date() }
+            if (decision.preferences.budget !== undefined && decision.preferences.budget !== null) {
+                update["aiMemory.preferences.budget"] = Number(decision.preferences.budget)
+            }
+            if (decision.preferences.speciality !== undefined) {
+                update["aiMemory.preferences.speciality"] = decision.preferences.speciality
+            }
+            if (decision.preferences.timePreference !== undefined) {
+                update["aiMemory.preferences.timePreference"] = decision.preferences.timePreference
+            }
+            await userModel.findByIdAndUpdate(userId, { $set: update })
+        }
+
+        res.json({
+            success: true,
+            ...decision,
+            reply: naturalReply || decision.reply,
+            nameStatusMessage
+        })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const confirmAttendance = async (req, res) => {
+    try {
+        const { userId, appointmentId } = req.body
+        const appointment = await appointmentModel.findById(appointmentId)
+        if (!appointment || String(appointment.userId) !== String(userId)) {
+            return res.json({ success: false, message: "Appointment not found" })
+        }
+        await appointmentModel.findByIdAndUpdate(appointmentId, { attendanceConfirmed: true })
+        res.json({ success: true, message: "Attendance confirmed" })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const requestReschedule = async (req, res) => {
+    try {
+        const { userId, appointmentId } = req.body
+        const appointment = await appointmentModel.findById(appointmentId)
+        if (!appointment || String(appointment.userId) !== String(userId)) {
+            return res.json({ success: false, message: "Appointment not found" })
+        }
+        await appointmentModel.findByIdAndUpdate(appointmentId, { rescheduleRequested: true })
+        res.json({ success: true, message: "Reschedule request submitted" })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const getAiMemory = async (req, res) => {
+    try {
+        const { userId } = req.body
+        const user = await userModel.findById(userId).select('name email aiMemory')
+        if (!user) {
+            return res.json({ success: false, message: "User not found" })
+        }
+        res.json({
+            success: true,
+            memory: {
+                preferredName: getResolvedDisplayName(user),
+                preferences: user.aiMemory?.preferences || {},
+                updatedAt: user.aiMemory?.updatedAt || null
+            }
+        })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const setAiMemoryName = async (req, res) => {
+    try {
+        const { userId, preferredName, allowOverwrite } = req.body
+        if (!preferredName || !preferredName.trim()) {
+            return res.json({ success: false, message: "Name is required" })
+        }
+
+        const sanitized = preferredName.trim().slice(0, 40)
+        if (!isAllowedAssistantName(sanitized)) {
+            return res.json({ success: false, message: "Please provide a valid person name." })
+        }
+        const user = await userModel.findById(userId).select('aiMemory.preferredName')
+        if (!user) {
+            return res.json({ success: false, message: "User not found" })
+        }
+        if (user.aiMemory?.preferredName && !allowOverwrite) {
+            return res.json({
+                success: false,
+                message: "Name memory is already set for this account. Confirm overwrite to change it."
+            })
+        }
+        await userModel.findByIdAndUpdate(userId, {
+            $set: {
+                "aiMemory.preferredName": sanitized,
+                "aiMemory.updatedAt": new Date()
+            }
+        })
+
+        res.json({ success: true, message: "Name memory updated", preferredName: sanitized })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+const setAiMemoryPreferences = async (req, res) => {
+    try {
+        const { userId, budget, speciality, timePreference } = req.body
+        const update = {
+            "aiMemory.updatedAt": new Date()
+        }
+        if (budget !== undefined && budget !== null) update["aiMemory.preferences.budget"] = Number(budget)
+        if (speciality !== undefined) update["aiMemory.preferences.speciality"] = speciality
+        if (timePreference !== undefined) update["aiMemory.preferences.timePreference"] = timePreference
+
+        await userModel.findByIdAndUpdate(userId, { $set: update })
+        res.json({ success: true, message: "Preference memory updated" })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+export {
+    registerUser,
+    loginUser,
+    getProfile,
+    updateProfile,
+    bookAppointment,
+    listAppointment,
+    cancelAppointment,
+    paymentRazorpay,
+    verifyRazorpay,
+    addHealthVisit,
+    addHealthRecord,
+    getHealth,
+    endCarePlanUser,
+    analyzeSymptoms,
+    aiChat,
+    confirmAttendance,
+    requestReschedule,
+    getAiMemory,
+    setAiMemoryName,
+    setAiMemoryPreferences
+}

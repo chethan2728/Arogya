@@ -7,7 +7,7 @@ const Footer = () => {
       <div className='flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm soft-text'>
         {/*-----left section ----- */}
         <div>
-            <img className='mb-1 w-48' src={assets.logo} alt="" />
+            <img className='mb-1 w-48' src={assets.logo} alt="Arogya logo" />
             <p className='w-full md:w-2/3 leading-6'>At CareXpert, we believe that expert care should be accessible, reliable, and built on trust. Our mission is to provide solutions that simplify your life while ensuring quality and support you can count on every step of the way.</p>
         </div>
 
